@@ -56,9 +56,27 @@
       </Row>
     </div>
   </Row>
+
+  <Separator/>
+  <Row>
+    <div class="food-test">
+
+      Food category : <Select2 Key="food-category" Tag="FoodCategory" values="1 2" i18n="Vegetables Fruit" Params="filter=event;placeholder=none"/>
+
+      Food item : <Select2 Key="food-item" Tag="FoodItem" Params=""/>
+    </div>
+  </Row>
+  <Separator/>
+  <Row>
+    <Select2 Tag="Entreprise" Params="ajax-url=enterprises-service;ajax-datatype=json;ajax-delay=250;ajax-cache=yes;width=250px"/>
+  </Row>
+
   <Bindings>
     <Ajax data-ajax-scope=".company" Keys="company contact" Source="company" Service="^/selectors/contacts?company=$_"/>
     <Ajax data-ajax-scope=".contract" Keys="contact contract" Source="contact" Service="^/selectors/contracts?contact=$_"/>
+
+    <Ajax data-ajax-scope=".food-test" Keys="food-category food-item" Source="food-category" Service="^/food-service?food-category=$_"/>
+
     <Require Keys="name surname"/>
     <Enforce>
       <RegExp Keys="age" Message="Age can only contain numbers" Pattern="[0-9]*">^\s*$|^\d*$</RegExp>
