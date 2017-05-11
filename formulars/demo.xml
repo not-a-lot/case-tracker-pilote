@@ -56,8 +56,11 @@
       </Row>
     </div>
   </Row>
-
   <Separator/>
+  <!--<Row>-->
+    <!--<Select2 Key="animals" Tag="Animals" Params="multiple=yes"/>-->
+  <!--</Row>-->
+  <!--<Separator/>-->
   <Row>
     <div class="food-test">
 
@@ -75,7 +78,7 @@
     <Ajax data-ajax-scope=".company" Keys="company contact" Source="company" Service="^/selectors/contacts?company=$_"/>
     <Ajax data-ajax-scope=".contract" Keys="contact contract" Source="contact" Service="^/selectors/contracts?contact=$_"/>
 
-    <Ajax data-ajax-scope=".food-test" Keys="food-category food-item" Source="food-category" Service="^/food-service?food-category=$_"/>
+    <Ajax data-ajax-scope=".food-test" Keys="food-category food-item" Source="food-category" Service="^/food-service?food-category=$_" Wrapper="p"/>
 
     <Require Keys="name surname"/>
     <Enforce>
