@@ -144,6 +144,7 @@ declare function site:navigation( $cmd as element(), $view as element() ) as ele
 
 declare function site:select2($cmd as element(), $source as element(), $view as element()*) as element()* {
   $view
+  (:let $view := $view return $view/*:)
 };
 
 (: ======================================================================

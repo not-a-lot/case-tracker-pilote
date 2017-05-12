@@ -466,7 +466,7 @@
     <model src="models/enterprises-service.xql"/>
   </item>
   <item name="animals">
-    <model src="s2-ex-animals.xql"/>
+    <model src="models/s2-ex-animals.xql"/>
   </item>
 
   <!-- *************************** -->
