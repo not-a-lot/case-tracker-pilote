@@ -49,6 +49,7 @@ declare function site:branch( $cmd as element(), $source as element(), $view as 
  case element(site:message) return view:message($cmd)
  case element(site:login) return site:login($cmd)
  case element(site:field) return view:field($cmd, $source, $view)
+ case element(site:select2) return site:select2($cmd, $source, $view)
  case element(site:conditional) return site:conditional($cmd, $source, $view)
  default return $view/*[local-name(.) = local-name($source)]/*
  (: default treatment to implicitly manage other modules :)
@@ -139,6 +140,10 @@ declare function site:navigation( $cmd as element(), $view as element() ) as ele
         ()
       }
     </ul>
+};
+
+declare function site:select2($cmd as element(), $source as element(), $view as element()*) as element()* {
+  $view
 };
 
 (: ======================================================================
