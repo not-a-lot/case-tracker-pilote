@@ -1,4 +1,4 @@
-xquery version "1.0";
+xquery version "3.0";
 (: --------------------------------------
    Case tracker pilote application
 
@@ -13,6 +13,7 @@ declare default element namespace "http://www.w3.org/1999/xhtml";
 
 declare namespace site = "http://oppidoc.com/oppidum/site";
 declare namespace xt = "http://ns.inria.org/xtiger";
+declare namespace functx = "http://www.functx.com";
 declare namespace request = "http://exist-db.org/xquery/request";
 declare namespace session = "http://exist-db.org/xquery/session";
 declare namespace response="http://exist-db.org/xquery/response";
@@ -24,6 +25,18 @@ import module namespace globals = "http://oppidoc.com/ns/xcm/globals" at "lib/gl
 import module namespace access = "http://oppidoc.com/ns/xcm/access" at "../xcm/lib/access.xqm";
 import module namespace view = "http://oppidoc.com/ns/xcm/view" at "../xcm/lib/view.xqm";
 (:import module namespace partial = "http://oppidoc.com/ns/xcm/partial" at "app/partial.xqm";:)
+
+declare function functx:add-attributes($elements as element()*, $attrNames as xs:QName*, $attrValues as xs:anyAtomicType*) as element()? {
+  for $element in $elements
+  return element { node-name($element)}
+  { for $attrName at $seq in $attrNames
+  return if ($element/@*[node-name(.) = $attrName])
+  then ()
+  else attribute {$attrName}
+    {$attrValues[$seq]},
+  $element/@*,
+  $element/node() }
+};
 
 (: ======================================================================
    Trick to use request:get-uri behind a reverse proxy that injects
@@ -143,8 +156,10 @@ declare function site:navigation( $cmd as element(), $view as element() ) as ele
 };
 
 declare function site:select2($cmd as element(), $source as element(), $view as element()*) as element()* {
-  $view
-  (:let $view := $view return $view/*:)
+  let $sourceParams := $source/@param
+  let $xtUse := $view/site:select2[@Key = "animals"]/xt:use
+  let $update := functx:add-attributes($xtUse, xs:QName('param'), $sourceParams)
+  return $update
 };
 
 (: ======================================================================

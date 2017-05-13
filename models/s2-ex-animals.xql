@@ -4,8 +4,8 @@ declare namespace xt = "http://ns.inria.org/xtiger";
 
 let $animals := doc('/db/sites/ctracker/ajax-tests/animals.xml')/Animals
 let $ids := data($animals/Item/@value)
-let $labels := $animals/Item/text()
-
+let $labels := $animals/Item/text() ! fn:replace(., '\s', '\\ ')
+(: ! is the map operator (requires XQuery 3.0) :)
 return
   <site:view>
     <site:select2 Key="animals">

@@ -1,4 +1,4 @@
-xquery version "1.0";
+xquery version "3.0";
 (: --------------------------------------
    Case tracker pilote application
 
@@ -28,24 +28,32 @@ let $cmd := request:get-attribute('oppidum.command')
 let $lang := string($cmd/@lang)
 let $target := oppidum:get-resource(oppidum:get-command())/@name
 let $goal := request:get-parameter('goal', 'read')
+
 return
   if ($goal = ('update','create')) then
-    <site:view>
-      <site:field Key="company">
-        <xt:use types="choice" i18n="Apple IBM Microsoft" values="1 2 3"
-        param="filter=event optional;class=span12 a-control"
-        ></xt:use>
-      </site:field>
-      <site:field Key="contact">
-        <xt:use types="choice"
-        param="filter=event optional;class=span12 a-control"
-        ></xt:use>
-      </site:field>
-      <site:field Key="contract">
-        <xt:use types="choice"
-        param="filter=optional;class=span12 a-control"
-        ></xt:use>
-      </site:field>
-    </site:view>
+    let $animals := doc('/db/sites/ctracker/ajax-tests/animals.xml')/Animals
+    let $ids := data($animals/Item/@value)
+    let $labels := $animals/Item/text() ! fn:replace(., '\s', '\\ ')
+      return
+        <site:view>
+          <site:field Key="company">
+            <xt:use types="choice" i18n="Apple IBM Microsoft" values="1 2 3"
+            param="filter=event optional;class=span12 a-control"
+            ></xt:use>
+          </site:field>
+          <site:field Key="contact">
+            <xt:use types="choice"
+            param="filter=event optional;class=span12 a-control"
+            ></xt:use>
+          </site:field>
+          <site:field Key="contract">
+            <xt:use types="choice"
+            param="filter=optional;class=span12 a-control"
+            ></xt:use>
+          </site:field>
+          <site:select2 Key="animals">
+            <xt:use types="select2" values="1 2 3 4 5" i18n="{fn:string-join($labels, ' ')}"/>
+          </site:select2>
+        </site:view>
   else (: 'read' - only constant fields  :)
     <site:view/>
