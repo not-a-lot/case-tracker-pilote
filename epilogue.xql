@@ -156,10 +156,16 @@ declare function site:navigation( $cmd as element(), $view as element() ) as ele
 };
 
 declare function site:select2($cmd as element(), $source as element(), $view as element()*) as element()* {
-  let $sourceParams := $source/@param
-  let $xtUse := $view/site:select2[@Key = "animals"]/xt:use
-  let $update := functx:add-attributes($xtUse, xs:QName('param'), $sourceParams)
-  return $update
+  let $sourceKey := data($source/@Key)
+  let $sourceParams := data($source/@param)
+  let $xtUse := $view/site:select2[@Key = $sourceKey]/xt:use
+    return element xt:use { (: { node-name($xtUse)} :)
+      attribute {"types"} {"select2"},
+      attribute {"param"} {$sourceParams},
+      attribute {"values"} {data($xtUse/@values)}
+      (:attribute {"i18n"} {data($xtUse/@i18n)}:)
+      (:$source/@*[node-name(.) != xs:QName("param")], $xtUse/@*:)
+    }
 };
 
 (: ======================================================================
