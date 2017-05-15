@@ -29,11 +29,14 @@ let $lang := string($cmd/@lang)
 let $target := oppidum:get-resource(oppidum:get-command())/@name
 let $goal := request:get-parameter('goal', 'read')
 
+(: Important : We declare a default namespace here, with « declare default element namespace "http://www.w3.org/1999/xhtml"; ». A default ns applies to every segment of an XPath expression ! Therefore, an expression such as « $animals/Item/text() » does not work, because eXist looks for « $animals/xhtml:Item/text() », which it does not find. There are several ways of solving this problem, but in simple cases like in this file, the shortest way is to add appropriate filters : « *[local-name(.) eq 'Animals'] » and « *[local-name(.) eq 'Item'] ». :)
+
 return
   if ($goal = ('update','create')) then
-    let $animals := doc('/db/sites/ctracker/ajax-tests/animals.xml')/Animals
-    let $ids := data($animals/Item/@value)
-    let $labels := $animals/Item/text() ! fn:replace(., '\s', '\\ ')
+    let $animals := doc('/db/sites/ctracker/ajax-tests/animals.xml')/*[local-name(.) eq 'Animals']
+
+    let $ids := data($animals/*[local-name(.) eq 'Item']/@value)
+    let $labels := $animals/*[local-name(.) eq 'Item']/text() ! fn:replace(., '\s', '\\ ')
       return
         <site:view>
           <site:field Key="company">
@@ -52,7 +55,7 @@ return
             ></xt:use>
           </site:field>
           <site:select2 Key="animals">
-            <xt:use types="select2" values="1 2 3 4 5" i18n="{fn:string-join($labels, ' ')}"/>
+            <xt:use types="select2" values="{fn:string-join($ids, ' ')}" i18n="{fn:string-join($labels, ' ')}"/>
           </site:select2>
         </site:view>
   else (: 'read' - only constant fields  :)

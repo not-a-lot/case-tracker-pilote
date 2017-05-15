@@ -162,8 +162,8 @@ declare function site:select2($cmd as element(), $source as element(), $view as 
     return element xt:use { (: { node-name($xtUse)} :)
       attribute {"types"} {"select2"},
       attribute {"param"} {$sourceParams},
-      attribute {"values"} {data($xtUse/@values)}
-      (:attribute {"i18n"} {data($xtUse/@i18n)}:)
+      attribute {"values"} {data($xtUse/@values)},
+      attribute {"i18n"} {data($xtUse/@i18n)}
       (:$source/@*[node-name(.) != xs:QName("param")], $xtUse/@*:)
     }
 };
