@@ -13,7 +13,6 @@ declare default element namespace "http://www.w3.org/1999/xhtml";
 
 declare namespace site = "http://oppidoc.com/oppidum/site";
 declare namespace xt = "http://ns.inria.org/xtiger";
-declare namespace functx = "http://www.functx.com";
 declare namespace request = "http://exist-db.org/xquery/request";
 declare namespace session = "http://exist-db.org/xquery/session";
 declare namespace response="http://exist-db.org/xquery/response";
@@ -25,18 +24,6 @@ import module namespace globals = "http://oppidoc.com/ns/xcm/globals" at "lib/gl
 import module namespace access = "http://oppidoc.com/ns/xcm/access" at "../xcm/lib/access.xqm";
 import module namespace view = "http://oppidoc.com/ns/xcm/view" at "../xcm/lib/view.xqm";
 (:import module namespace partial = "http://oppidoc.com/ns/xcm/partial" at "app/partial.xqm";:)
-
-declare function functx:add-attributes($elements as element()*, $attrNames as xs:QName*, $attrValues as xs:anyAtomicType*) as element()? {
-  for $element in $elements
-  return element { node-name($element)}
-  { for $attrName at $seq in $attrNames
-  return if ($element/@*[node-name(.) = $attrName])
-  then ()
-  else attribute {$attrName}
-    {$attrValues[$seq]},
-  $element/@*,
-  $element/node() }
-};
 
 (: ======================================================================
    Trick to use request:get-uri behind a reverse proxy that injects
@@ -155,17 +142,76 @@ declare function site:navigation( $cmd as element(), $view as element() ) as ele
     </ul>
 };
 
+(: ======================================================================
+   Add parameter (tested ✔)
+   -------------------
+   Appends a new parameter ";name=value" to a list of params if the name
+   of the new parameter isn't already in the list
+
+   @param params xs:string - a string of "name=value" parameters separated by semi-colons
+   @param paramToAdd xs:string - the "name=value" parameter to append
+   @returns xs:string - the new string of parameters with the paramToAdd appended
+
+   ======================================================================
+:)
+declare function local:add-param($params as xs:string, $paramToAdd as xs:string) as xs:string {
+  if($params eq '') then
+    $paramToAdd
+  else
+    let $newParamName := substring-before($paramToAdd, '=')
+    return
+      if (contains($params, $newParamName)) then
+        $params
+      else
+        concat($params, ';', $paramToAdd)
+};
+
+(: ======================================================================
+   Parameter add loop (tested ✔)
+   -------------------
+   Recursively appends new parameters
+   ======================================================================
+:)
+declare function local:add-loop($acc as xs:string, $paramsToAdd as xs:string*) as xs:string {
+  if (empty($paramsToAdd)) then
+    $acc
+  else
+    let $newAcc := local:add-param($acc, $paramsToAdd[1])
+    return local:add-loop($newAcc, $paramsToAdd[position() != 1])
+
+};
+
+(: ======================================================================
+   Merge parameters (tested ✔)
+   -------------------
+   Merges the source parameters with the view parameters. If a parameter
+   name is present in both strings, the value of the view param is kept
+   ======================================================================
+:)
+declare function local:mergeParams($sourceParams as xs:string, $viewParams as xs:string) as xs:string {
+  let $sourceParamSeq := tokenize($sourceParams, ';')
+  return local:add-loop($viewParams, $sourceParamSeq)
+};
+
 declare function site:select2($cmd as element(), $source as element(), $view as element()*) as element()* {
-  let $sourceKey := data($source/@Key)
-  let $sourceParams := data($source/@param)
-  let $xtUse := $view/site:select2[@Key = $sourceKey]/xt:use
-    return element xt:use { (: { node-name($xtUse)} :)
-      attribute {"types"} {"select2"},
-      attribute {"param"} {$sourceParams},
-      attribute {"values"} {data($xtUse/@values)},
-      attribute {"i18n"} {data($xtUse/@i18n)}
-      (:$source/@*[node-name(.) != xs:QName("param")], $xtUse/@*:)
-    }
+  let $goal := request:get-parameter('goal', 'read')
+  return
+    if (($source/@avoid = $goal) or ($source/@meet and not($source/@meet = $goal))) then
+      ()
+    else
+      let $sourceKey := data($source/@Key)
+      let $sourceParams := data($source/@param)
+      let $viewParamsData := data($view/@Param)
+      let $viewParams := if (empty($viewParamsData)) then '' else $viewParamsData
+      let $viewParamsRead := if ($goal eq 'read') then
+        local:add-param($viewParams, 'read-only=yes') else $viewParams
+      let $xtUse := $view/site:select2[@Key = $sourceKey]/xt:use
+        return element xt:use {
+          attribute {"types"} {"select2"},
+          attribute {"label"} {$source/@Tag},
+          attribute {"param"} {local:mergeParams($sourceParams, $viewParamsRead)},
+          $xtUse/(@values|@default|@i18n)
+        }
 };
 
 (: ======================================================================
@@ -268,21 +314,21 @@ declare function local:render( $cmd as element(), $source as element(), $view as
           )
         else if ($child/*) then
           if ($child/@condition) then
-          let $go :=
-            if (string($child/@condition) = 'has-error') then
-              oppidum:has-error()
-            else if (string($child/@condition) = 'has-message') then
-              oppidum:has-message()
-            else if ($view/*[local-name(.) = substring-after($child/@condition, ':')]) then
-                true()
-            else
-              false()
-          return
-            if ($go) then
-              local:render($cmd, $child, $view)
-            else
-              ()
-        else
+            let $go :=
+              if (string($child/@condition) = 'has-error') then
+                oppidum:has-error()
+              else if (string($child/@condition) = 'has-message') then
+                oppidum:has-message()
+              else if ($view/*[local-name(.) = substring-after($child/@condition, ':')]) then
+                  true()
+              else
+                false()
+            return
+              if ($go) then
+                local:render($cmd, $child, $view)
+              else
+                ()
+          else
            local:render($cmd, $child, $view)
         else
          $child
