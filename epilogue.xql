@@ -1,4 +1,4 @@
-xquery version "3.0";
+xquery version "1.0";
 (: --------------------------------------
    Case tracker pilote application
 
@@ -49,7 +49,7 @@ declare function site:branch( $cmd as element(), $source as element(), $view as 
  case element(site:message) return view:message($cmd)
  case element(site:login) return site:login($cmd)
  case element(site:field) return view:field($cmd, $source, $view)
- case element(site:select2) return site:select2($cmd, $source, $view)
+ case element(site:select2) return view:select2($cmd, $source, $view)
  case element(site:conditional) return site:conditional($cmd, $source, $view)
  default return $view/*[local-name(.) = local-name($source)]/*
  (: default treatment to implicitly manage other modules :)
@@ -140,78 +140,6 @@ declare function site:navigation( $cmd as element(), $view as element() ) as ele
         ()
       }
     </ul>
-};
-
-(: ======================================================================
-   Add parameter (tested ✔)
-   -------------------
-   Appends a new parameter ";name=value" to a list of params if the name
-   of the new parameter isn't already in the list
-
-   @param params xs:string - a string of "name=value" parameters separated by semi-colons
-   @param paramToAdd xs:string - the "name=value" parameter to append
-   @returns xs:string - the new string of parameters with the paramToAdd appended
-
-   ======================================================================
-:)
-declare function local:add-param($params as xs:string, $paramToAdd as xs:string) as xs:string {
-  if($params eq '') then
-    $paramToAdd
-  else
-    let $newParamName := substring-before($paramToAdd, '=')
-    return
-      if (contains($params, $newParamName)) then
-        $params
-      else
-        concat($params, ';', $paramToAdd)
-};
-
-(: ======================================================================
-   Parameter add loop (tested ✔)
-   -------------------
-   Recursively appends new parameters
-   ======================================================================
-:)
-declare function local:add-loop($acc as xs:string, $paramsToAdd as xs:string*) as xs:string {
-  if (empty($paramsToAdd)) then
-    $acc
-  else
-    let $newAcc := local:add-param($acc, $paramsToAdd[1])
-    return local:add-loop($newAcc, $paramsToAdd[position() != 1])
-
-};
-
-(: ======================================================================
-   Merge parameters (tested ✔)
-   -------------------
-   Merges the source parameters with the view parameters. If a parameter
-   name is present in both strings, the value of the view param is kept
-   ======================================================================
-:)
-declare function local:mergeParams($sourceParams as xs:string, $viewParams as xs:string) as xs:string {
-  let $sourceParamSeq := tokenize($sourceParams, ';')
-  return local:add-loop($viewParams, $sourceParamSeq)
-};
-
-declare function site:select2($cmd as element(), $source as element(), $view as element()*) as element()* {
-  let $goal := request:get-parameter('goal', 'read')
-  return
-    if (($source/@avoid = $goal) or ($source/@meet and not($source/@meet = $goal))) then
-      ()
-    else
-      let $sourceKey := data($source/@Key)
-      let $sourceParams := data($source/@param)
-      let $viewParamsData := data($view/@Param)
-      let $viewParams := if (empty($viewParamsData)) then '' else $viewParamsData
-      let $viewParamsRead := if ($goal eq 'read') then
-        local:add-param($viewParams, 'read-only=yes') else $viewParams
-      let $xtUse := $view/site:select2[@Key = $sourceKey]/xt:use
-        return element xt:use {
-          attribute {"types"} {"select2"},
-          attribute {"label"} {$source/@Tag},
-          attribute {"param"} {local:mergeParams($sourceParams, $viewParamsRead)},
-          $xtUse/(@values|@default|@i18n)
-        }
 };
 
 (: ======================================================================

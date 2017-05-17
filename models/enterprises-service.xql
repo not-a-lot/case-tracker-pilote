@@ -4,11 +4,16 @@ declare namespace json="http://www.json.org";
 import module namespace oppidum = "http://oppidoc.com/oppidum/util" at "../../oppidum/lib/util.xqm";
 declare option exist:serialize "method=json media-type=application/json";
 
-let $qTerm := request:get-parameter('q', ())
+let $qTerm := request:get-parameter('q', '')
 return
-  if($qTerm eq ()) then <data></data> else (: This test doesn't seem to work. This causes an error 500,
-  although it doesn't make the client-side freeze. But actually, select2 probably shouldn't
-  send an empty request when we just click on the drop-down list. At least, in the demo on Select2's website, it doesn't :)
+  if($qTerm eq '') then
+    <data><items json:array="true"></items></data>
+  else (: Note : the
+  purpose of this test is to prevent an error that occurs otherwise when the user first
+  clicks on the field and an empty request is sent, before any character has been typed.
+  But actually, select2 probably shouldn't send an empty request when we just click on
+  the drop-down list. At least, in the demo on Select2's website, it doesn't. Should
+  find out why this happens. Compatibility issue between libraries ? :)
 let $e := doc('/db/sites/ctracker/enterprises/enterprises.xml')/Enterprises
 return
     let $matches := $e/Enterprise[matches(Name, $qTerm, "i")]
