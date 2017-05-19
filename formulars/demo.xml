@@ -63,15 +63,13 @@
   <Separator/>
   <Row>
     <div class="food-test">
-
-      Food category : <Select2 Key="food-category" Tag="FoodCategory" values="1 2" i18n="Vegetables Fruit" Params="filter=event;placeholder=none"/>
-
-      Food item : <Select2 Key="food-item" Tag="FoodItem" Params=""/>
+      <Select2 Key="food-category" Tag="FoodCategory" values="1 2" i18n="Vegetables Fruit" Params="filter=event;placeholder=none" W="5" Gap="1.5">Food category</Select2>
+      <Select2 Key="food-item" Tag="FoodItem" Params="" W="5" Gap="1.2">Food item</Select2>
     </div>
   </Row>
   <Separator/>
   <Row>
-    <Select2 Tag="Entreprise" Params="ajax-url=enterprises-service;ajax-datatype=json;ajax-delay=250;ajax-cache=yes;width=250px"/>
+    <Select2 Tag="Entreprise" Params="ajax-url=enterprises-service;ajax-datatype=json;ajax-delay=250;ajax-cache=yes;width=250px" W="8" Gap="1">Enterprise</Select2>
   </Row>
 
   <Bindings>
